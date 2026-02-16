@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Over 2.5 Predictor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { background:#0f172a; color:white; font-family:Arial; padding:10px;}
+        .match {
+            background:#1e293b;
+            padding:15px;
+            margin:10px 0;
+            border-radius:12px;
+        }
+        .open { color:#22c55e; font-weight:bold; font-size:18px;}
+    </style>
+</head>
+<body>
+    <h1>⚽ AI Over 2.5 Predictor</h1>
+
+    {% for m in matches %}
+    <div class="match">
+        <h3>{{m.home}} vs {{m.away}}</h3>
+        <p>Stato: {{m.status}}</p>
+        <p>Risultato: {{m.home_score}} - {{m.away_score}}</p>
+        <p class="open">{{m.prediction}}</p>
+    </div>
+    {% endfor %}
+
+</body>
+</html>
