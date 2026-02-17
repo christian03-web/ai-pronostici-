@@ -3,59 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI TOTAL SCANNER PRO</title>
+    <title>AI LIVE SCANNER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #05070a; color: #e2e8f0; font-family: ui-sans-serif, system-ui; }
-        .gold-pick { border: 1px solid #eab308; background: rgba(234, 179, 8, 0.05); }
+        body { background: #020617; color: white; font-family: sans-serif; }
+        .match-card { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; }
+        .live-dot { height: 8px; width: 8px; background-color: #ef4444; border-radius: 50%; display: inline-block; margin-right: 5px; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
     </style>
 </head>
 <body class="p-4">
-    <div class="max-w-2xl mx-auto">
-        <header class="mb-8 border-b border-slate-800 pb-4 flex justify-between items-center">
-            <h1 class="text-xl font-black text-blue-500 tracking-tighter uppercase">Total Match Scanner</h1>
-            <span class="text-[10px] text-emerald-500 font-mono">LIVE_READY</span>
+    <div class="max-w-xl mx-auto">
+        <header class="mb-6 flex justify-between items-center border-b border-slate-800 pb-4">
+            <h1 class="text-xl font-black text-blue-500 italic uppercase">Live AI Scanner</h1>
+            <div id="status" class="text-[10px] text-slate-500 font-mono italic">SYNCING...</div>
         </header>
 
-        {% if not matches %}
-        <div class="text-center p-10 opacity-50 italic">Nessuna partita trovata per oggi...</div>
-        {% endif %}
-
-        {% for m in matches %}
-        <div class="mb-3 p-4 rounded-xl bg-slate-900/50 border border-slate-800 {{ 'gold-pick' if m.is_gold }}">
-            <div class="flex justify-between items-start mb-4">
-                <div>
-                    <span class="text-[9px] font-bold text-blue-400 uppercase tracking-widest">{{ m.league }}</span>
-                    <h2 class="text-sm font-bold">{{ m.match }}</h2>
-                    <span class="text-[10px] text-slate-500">{{ m.status }}</span>
+        <div id="match-container" class="space-y-4">
+            {% for m in matches %}
+            <div class="match-card p-4">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-[10px] text-blue-400 font-bold uppercase">{{ m.league }}</span>
+                    <span class="text-[10px] text-slate-400 font-bold">
+                        {% if m.is_live %}<span class="live-dot"></span>LIVE {% endif %}{{ m.time }}
+                    </span>
                 </div>
-                {% if m.is_gold %}
-                <span class="text-yellow-500 text-[10px] font-bold">🎯 GOLD PICK</span>
-                {% endif %}
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div class="bg-black/30 p-2 rounded-lg">
-                    <div class="flex justify-between text-[10px] mb-1">
-                        <span class="opacity-60">OVER 2.5</span>
-                        <span class="text-emerald-400 font-bold">{{ m.over_p }}%</span>
-                    </div>
-                    <div class="w-full bg-slate-800 h-1 rounded-full overflow-hidden">
-                        <div class="bg-emerald-500 h-full" style="width: {{ m.over_p }}%"></div>
-                    </div>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-sm font-bold w-1/2">{{ m.match }}</h2>
+                    <div class="text-lg font-black text-yellow-500 bg-black/40 px-3 py-1 rounded">{{ m.score }}</div>
                 </div>
-                <div class="bg-black/30 p-2 rounded-lg">
-                    <div class="flex justify-between text-[10px] mb-1">
-                        <span class="opacity-60">GG (BOTH)</span>
-                        <span class="text-blue-400 font-bold">{{ m.gg_p }}%</span>
+                <div class="grid grid-cols-2 gap-4 border-t border-slate-800 pt-3">
+                    <div class="text-center">
+                        <div class="text-[9px] opacity-50 uppercase">Over 2.5</div>
+                        <div class="text-emerald-400 font-bold">{{ m.over_p }}%</div>
                     </div>
-                    <div class="w-full bg-slate-800 h-1 rounded-full overflow-hidden">
-                        <div class="bg-blue-500 h-full" style="width: {{ m.gg_p }}%"></div>
+                    <div class="text-center">
+                        <div class="text-[9px] opacity-50 uppercase">GG Prob</div>
+                        <div class="text-blue-400 font-bold">{{ m.gg_p }}%</div>
                     </div>
                 </div>
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
     </div>
+
+    <script>
+        async function updateScores() {
+            document.getElementById('status').innerText = 'UPDATING...';
+            try {
+                const response = await fetch('/api/updates');
+                const data = await response.json();
+                const container = document.getElementById('match-container');
+                container.innerHTML = '';
+                
+                data.forEach(m => {
+                    const card = `
+                        <div class="match-card p-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="text-[10px] text-blue-400 font-bold uppercase">${m.league}</span>
+                                <span class="text-[10px] text-slate-400 font-bold">
+                                    ${m.is_live ? '<span class="live-dot"></span>LIVE ' : ''}${m.time}
+                                </span>
+                            </div>
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-sm font-bold w-1/2">${m.match}</h2>
+                                <div class="text-lg font-black text-yellow-500 bg-black/40 px-3 py-1 rounded">${m.score}</div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 border-t border-slate-800 pt-3">
+                                <div class="text-center">
+                                    <div class="text-[9px] opacity-50 uppercase">Over 2.5</div>
+                                    <div class="text-emerald-400 font-bold">${m.over_p}%</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-[9px] opacity-50 uppercase">GG Prob</div>
+                                    <div class="text-blue-400 font-bold">${m.gg_p}%</div>
+                                </div>
+                            </div>
+                        </div>`;
+                    container.innerHTML += card;
+                });
+                document.getElementById('status').innerText = 'LIVE SYNCED';
+            } catch (err) {
+                document.getElementById('status').innerText = 'CONNECTION ERROR';
+            }
+        }
+
+        // Aggiorna ogni 30 secondi
+        setInterval(updateScores, 30000);
+    </script>
 </body>
 </html>
