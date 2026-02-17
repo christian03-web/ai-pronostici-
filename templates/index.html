@@ -3,46 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Total Scanner</title>
+    <title>AI POWER SCANNER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #0a0c10; color: #e1e7ef; font-family: 'Inter', sans-serif; }
-        .match-row { background: #12151c; border-left: 3px solid #1e293b; transition: 0.2s; }
-        .match-row:hover { background: #1a1f29; border-left-color: #3b82f6; }
-        .top-pick { border-left-color: #f59e0b !important; background: #1e1b4b; }
-    </style>
+        body { background: #020617; color: #f1f5f9; font-family: 'Inter', sans-serif; }
+        .gold-card { background: linear-gradient(135deg, #1e1b4b 0%, #020617 100%); border: 1px solid #eab308; }
+        .stat-bar { height: 4px; background: #1e293b; border-radius: 2px; }
+    </div>
 </head>
-<body class="p-4 bg-slate-950">
-    <div class="max-w-3xl mx-auto">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-xl font-black tracking-tight uppercase">Full Match Scanner <span class="text-blue-500">v3.0</span></h1>
-            <span class="text-[9px] bg-slate-800 px-2 py-1 rounded text-slate-400">AGGIORNAMENTO LIVE</span>
+<body class="p-4">
+    <div class="max-w-xl mx-auto">
+        <div class="mb-8 text-center">
+            <h1 class="text-3xl font-black italic text-blue-500 tracking-tighter">AI RANKING SCANNER</h1>
+            <p class="text-[10px] text-slate-500 uppercase tracking-widest">Analisi incrociata Classifiche + Poisson</p>
         </div>
 
-        <div class="space-y-2">
-            {% for m in matches %}
-            <div class="match-row p-4 rounded-lg flex items-center justify-between {{ 'top-pick' if m.is_top }}">
-                <div class="flex-1">
-                    <div class="flex items-center gap-2">
-                        <span class="text-[9px] font-bold text-blue-400 uppercase">{{ m.league }}</span>
-                        <span class="text-[9px] text-slate-500">{{ m.status }}</span>
-                    </div>
-                    <h2 class="text-sm font-bold">{{ m.match }}</h2>
+        {% for m in matches %}
+        <div class="mb-4 p-5 rounded-xl border border-slate-800 {{ 'gold-card shadow-[0_0_15px_rgba(234,179,8,0.1)]' if m.is_gold else 'bg-slate-900/50' }}">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <span class="text-[10px] font-bold text-blue-400 uppercase">{{ m.league }}</span>
+                    <h2 class="text-md font-bold leading-tight">{{ m.match }}</h2>
                 </div>
-                
-                <div class="flex gap-4 text-center">
-                    <div class="w-16">
-                        <div class="text-[8px] text-slate-500 uppercase">Over 2.5</div>
-                        <div class="text-sm font-black text-emerald-400">{{ m.over_p }}%</div>
+                {% if m.is_gold %}
+                <span class="text-yellow-500 text-[10px] font-black animate-pulse">80% TARGET MATCH</span>
+                {% endif %}
+            </div>
+
+            <div class="grid grid-cols-2 gap-6">
+                <div>
+                    <div class="flex justify-between text-[10px] mb-1">
+                        <span class="opacity-60">OVER 2.5</span>
+                        <span class="font-bold text-emerald-400">{{ m.over_p }}%</span>
                     </div>
-                    <div class="w-16">
-                        <div class="text-[8px] text-slate-500 uppercase">G/G</div>
-                        <div class="text-sm font-black text-blue-400">{{ m.gg_p }}%</div>
+                    <div class="stat-bar"><div class="h-full bg-emerald-500" style="width: {{ m.over_p }}%"></div></div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-[10px] mb-1">
+                        <span class="opacity-60">GG</span>
+                        <span class="font-bold text-blue-400">{{ m.gg_p }}%</span>
                     </div>
+                    <div class="stat-bar"><div class="h-full bg-blue-500" style="width: {{ m.gg_p }}%"></div></div>
                 </div>
             </div>
-            {% endfor %}
         </div>
+        {% endfor %}
     </div>
 </body>
 </html>
