@@ -1,86 +1,38 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI Over 2.5 Predictor</title>
-
-<style>
-body{
-    background:#0b1220;
-    color:white;
-    font-family:Arial;
-    padding:15px;
-}
-
-.header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-}
-
-.update{
-    color:#9ca3af;
-    font-size:14px;
-}
-
-.league{
-    margin-top:25px;
-    font-size:20px;
-    color:#60a5fa;
-    font-weight:bold;
-}
-
-.match{
-    background:#111827;
-    padding:14px;
-    margin:10px 0;
-    border-radius:12px;
-}
-
-.teams{
-    font-size:18px;
-    font-weight:bold;
-}
-
-.prob{
-    font-size:16px;
-    margin-top:6px;
-}
-
-.pred{
-    font-size:19px;
-    margin-top:8px;
-}
-</style>
-
-<script>
-setTimeout(function(){
-    location.reload();
-}, 600000);
-</script>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>80% OVER 2.5 PREDICTOR</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0b0e14; color: #e2e8f0; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: auto; }
+        .header { text-align: center; padding: 20px; border-bottom: 2px solid #3b82f6; margin-bottom: 20px; }
+        .match-card { background: #1a202c; border-radius: 10px; padding: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #3b82f6; }
+        .league-tag { font-size: 10px; color: #3b82f6; text-transform: uppercase; font-weight: bold; }
+        .match-name { font-size: 16px; font-weight: bold; margin-top: 5px; }
+        .percent { font-size: 24px; font-weight: 900; color: #10b981; }
+        .confidence { font-size: 10px; background: rgba(16, 185, 129, 0.2); padding: 3px 8px; border-radius: 5px; }
+    </style>
 </head>
-
 <body>
-
-<div class="header">
-<h1>⚽ AI OVER 2.5</h1>
-<div class="update">Aggiornato: {{update}}</div>
-</div>
-
-{% set last = "" %}
-{% for m in matches %}
-    {% if last != m.league %}
-        <div class="league">{{m.league}}</div>
-        {% set last = m.league %}
-    {% endif %}
-
-    <div class="match">
-        <div class="teams">{{m.home}} vs {{m.away}}</div>
-        <div class="prob">Probabilità Over 2.5: {{m.prob}}%</div>
-        <div class="pred">{{m.prediction}}</div>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 AI PREDICTOR</h1>
+            <p>Target Accuracy: 80% Over 2.5</p>
+        </div>
+        {% for match in matches %}
+        <div class="match-card">
+            <div>
+                <div class="league-tag">{{ match.league }}</div>
+                <div class="match-name">{{ match.match }}</div>
+            </div>
+            <div style="text-align: right;">
+                <div class="percent">{{ match.probability }}%</div>
+                <div class="confidence">{{ match.advice }} CONFIDENCE</div>
+            </div>
+        </div>
+        {% endfor %}
     </div>
-{% endfor %}
-
 </body>
 </html>
