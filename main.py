@@ -1,6 +1,7 @@
-import requests
-from flask import Flask, render_template, jsonify
+limport requests
+from flask import Flask, render_template
 from scipy.stats import poisson
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -8,50 +9,48 @@ LEAGUES = {
     'Premier League': 'eng.1', 'Serie A': 'ita.1', 'La Liga': 'esp.1',
     'Bundesliga': 'ger.1', 'Ligue 1': 'fra.1', 'Eredivisie': 'ned.1',
     'Champions League': 'uefa.champions', 'Europa League': 'uefa.europa',
-    'Conference League': 'uefa.conf', 'Serie B': 'ita.2'
+    'Conference League': 'uefa.conf', 'Serie B': 'ita.2', 'Portogallo': 'por.1'
 }
 
-def calculate_logic(h_id, a_id, l_name):
-    league_mu = 3.2 if l_name in ['Bundesliga', 'Eredivisie'] else 2.7
-    seed = (int(h_id) + int(a_id)) % 100
-    final_mu = league_mu + (seed / 100) - 0.5
+def calculate_over_prob(h_id, a_id, l_name):
+    # Base mu più alta per campionati spettacolari
+    base_mu = 3.3 if l_name in ['Bundesliga', 'Eredivisie', 'Champions League'] else 2.8
+    # Varianza basata su ID per personalizzare il match
+    mod = ((int(h_id) % 10) + (int(a_id) % 10)) / 20
+    mu = base_mu + mod
     
-    prob_over = (1 - (poisson.pmf(0, final_mu) + poisson.pmf(1, final_mu) + poisson.pmf(2, final_mu))) * 100
-    prob_gg = (1 - poisson.pmf(0, final_mu/1.7)) * (1 - poisson.pmf(0, final_mu/1.7)) * 100
-    return round(prob_over, 1), round(prob_gg, 1)
+    # Probabilità Poisson per Over 2.5
+    prob = (1 - (poisson.pmf(0, mu) + poisson.pmf(1, mu) + poisson.pmf(2, mu))) * 100
+    return round(prob, 1)
 
-def get_live_data():
-    all_results = []
+@app.route('/')
+def index():
+    all_matches = []
+    today = datetime.now().strftime("%d/%m/%Y")
+    
     for name, l_id in LEAGUES.items():
         url = f"http://site.api.espn.com/apis/site/v2/sports/soccer/{l_id}/scoreboard"
         try:
             resp = requests.get(url, timeout=5).json()
             for event in resp.get('events', []):
-                comp = event['competitions'][0]
-                h_team = comp['competitors'][0]
-                a_team = comp['competitors'][1]
+                h_team = event['competitions'][0]['competitors'][0]
+                a_team = event['competitions'][0]['competitors'][1]
                 
-                over_p, gg_p = calculate_logic(h_team['id'], a_team['id'], name)
+                prob = calculate_over_prob(h_team['id'], a_team['id'], name)
                 
-                all_results.append({
+                all_matches.append({
                     'league': name,
                     'match': event['name'],
-                    'score': comp['competitors'][0]['score'] + " - " + comp['competitors'][1]['score'],
                     'time': event['status']['type']['shortDetail'],
-                    'over_p': over_p,
-                    'gg_p': gg_p,
-                    'is_live': event['status']['type']['state'] == 'in'
+                    'prob': prob
                 })
         except: continue
-    return all_results
-
-@app.route('/')
-def index():
-    return render_template('index.html', matches=get_live_data())
-
-@app.route('/api/updates')
-def updates():
-    return jsonify(get_live_data())
+    
+    # SELEZIONE DELLE 8 MIGLIORI (LA SCHEDINA)
+    # Ordiniamo per probabilità decrescente e prendiamo le prime 8
+    betting_slip = sorted(all_matches, key=lambda x: x['prob'], reverse=True)[:8]
+    
+    return render_template('index.html', slip=betting_slip, date=today)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000)
