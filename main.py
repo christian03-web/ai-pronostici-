@@ -1,12 +1,11 @@
 from flask import Flask, render_template
 import requests
 import math
-def poisson_over25(home_xg, away_xg):
-    lam = home_xg + away_xg
-    prob = 1 - (math.exp(-lam) * (1 + lam + (lam**2)/2))
-    return round(prob * 100, 1)
+from datetime import datetime
+
 app = Flask(__name__)
 
+# Campionati principali
 LEAGUES = {
     "Serie A": "ita.1",
     "Premier League": "eng.1",
@@ -14,77 +13,82 @@ LEAGUES = {
     "Bundesliga": "ger.1",
     "Ligue 1": "fra.1",
     "Champions League": "uefa.champions",
-    "Europa League": "uefa.europa",
-    "Conference League": "uefa.europa.conf"
+    "Europa League": "uefa.europa"
 }
+
+# formula probabilità Over 2.5 (Poisson)
+def over25_probability(expected_goals):
+    p = 1 - (math.exp(-expected_goals) * (1 + expected_goals + (expected_goals**2)/2))
+    return round(p*100,1)
+
+def analyze_match(home, away):
+    # modello iniziale (base europea)
+    base_goals = 2.65
+
+    # piccola logica intelligente
+    attacking_teams = [
+        "Bayern", "Liverpool", "Manchester City", "PSG", "Barcelona",
+        "Real Madrid", "Atalanta", "Leverkusen", "Tottenham"
+    ]
+
+    if any(team in home for team in attacking_teams):
+        base_goals += 0.35
+    if any(team in away for team in attacking_teams):
+        base_goals += 0.35
+
+    probability = over25_probability(base_goals)
+
+    if probability >= 72:
+        level = "🔥 OVER 2.5 FORTE"
+    elif probability >= 58:
+        level = "🟡 OVER 2.5 POSSIBILE"
+    else:
+        level = "🔴 UNDER PROBABILE"
+
+    return probability, level
 
 def get_matches():
     matches = []
 
-    for league_name, league in LEAGUES.items():
-        url = f"http://site.api.espn.com/apis/site/v2/sports/soccer/{league}/scoreboard"
+    for league_name, code in LEAGUES.items():
+        url = f"https://site.api.espn.com/apis/site/v2/sports/soccer/{code}/scoreboard"
+
         try:
-            data = requests.get(url).json()
+            data = requests.get(url, timeout=15).json()
 
-            for event in data["events"]:
+            for event in data.get("events", []):
                 comp = event["competitions"][0]
-                teams = comp["competitors"]
+                state = comp["status"]["type"]["state"]
 
+                # SOLO PRE-PARTITA
+                if state != "pre":
+                    continue
+
+                teams = comp["competitors"]
                 home = teams[0]["team"]["displayName"]
                 away = teams[1]["team"]["displayName"]
 
-                home_score = teams[0].get("score", "0")
-                away_score = teams[1].get("score", "0")
+                probability, prediction = analyze_match(home, away)
 
-                status = comp["status"]["type"]["state"]
-if status != "pre":
-    continue
-                prediction = "⚖️ Normale"
-                if status != "Scheduled":
-                    total = int(home_score) + int(away_score)
-                    if total >= 2:
-                        prediction = "🔥 Alta probabilità Over 2.5"
-                    else:
-                        prediction = "⚠️ Attenzione"
-# stima semplice attacco/difesa
-home_attack = 1.4
-away_attack = 1.2
-
-# fattore casa
-home_xg = home_attack * 1.10
-away_xg = away_attack * 0.95
-
-over_prob = poisson_over25(home_xg, away_xg)
-
-if over_prob >= 70:
-    prediction = f"🔥 OVER 2.5 FORTE ({over_prob}%)"
-elif over_prob >= 55:
-    prediction = f"🟡 OVER 2.5 POSSIBILE ({over_prob}%)"
-else:
-    prediction = f"🔴 UNDER PROBABILE ({over_prob}%)"
                 matches.append({
+                    "league": league_name,
                     "home": home,
                     "away": away,
-                    "status": status,
-                    "home_score": home_score,
-                    "away_score": away_score,
+                    "prob": probability,
                     "prediction": prediction
-                    "league": league_name,
                 })
+
         except:
             pass
 
+    # ordina per probabilità più alta
+    matches.sort(key=lambda x: x["prob"], reverse=True)
     return matches
 
 @app.route("/")
-def index():
-    matches = get_matches()
-    return render_template("index.html", matches=matches)
-
-import os
+def home():
+    games = get_matches()
+    now = datetime.now().strftime("%d/%m %H:%M")
+    return render_template("index.html", matches=games, update=now)
 
 application = app
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 3000))
-    app.run(host="0.0.0.0", port=port)
