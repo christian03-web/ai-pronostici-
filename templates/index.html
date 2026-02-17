@@ -3,33 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>80% OVER 2.5 PREDICTOR</title>
+    <title>AI Gold Predictor</title>
     <style>
-        body { font-family: 'Inter', sans-serif; background: #0b0e14; color: #e2e8f0; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: auto; }
-        .header { text-align: center; padding: 20px; border-bottom: 2px solid #3b82f6; margin-bottom: 20px; }
-        .match-card { background: #1a202c; border-radius: 10px; padding: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #3b82f6; }
-        .league-tag { font-size: 10px; color: #3b82f6; text-transform: uppercase; font-weight: bold; }
-        .match-name { font-size: 16px; font-weight: bold; margin-top: 5px; }
-        .percent { font-size: 24px; font-weight: 900; color: #10b981; }
-        .confidence { font-size: 10px; background: rgba(16, 185, 129, 0.2); padding: 3px 8px; border-radius: 5px; }
+        :root { --gold: #ffd700; --bg: #05070a; --card: #111827; }
+        body { background: var(--bg); color: #f3f4f6; font-family: 'Segoe UI', sans-serif; padding: 15px; }
+        .container { max-width: 480px; margin: auto; }
+        .card { 
+            background: var(--card); border-radius: 12px; padding: 18px; 
+            margin-bottom: 12px; display: flex; justify-content: space-between;
+            align-items: center; border: 1px solid #1f2937;
+        }
+        .gold-border { border: 2px solid var(--gold) !important; box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); }
+        .league { color: #60a5fa; font-size: 11px; font-weight: bold; }
+        .teams { font-size: 15px; font-weight: 600; margin-top: 4px; }
+        .perc { font-size: 26px; font-weight: 900; color: #10b981; }
+        .gold-text { color: var(--gold) !important; }
+        .badge-gold { background: var(--gold); color: black; font-size: 9px; font-weight: 1000; padding: 2px 6px; border-radius: 4px; margin-top: 5px; display: inline-block; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🎯 AI PREDICTOR</h1>
-            <p>Target Accuracy: 80% Over 2.5</p>
-        </div>
-        {% for match in matches %}
-        <div class="match-card">
+        <h2 style="text-align:center; letter-spacing: 2px;">🏆 GOLD SELECTION</h2>
+        <p style="text-align:center; font-size: 12px; opacity: 0.6;">Solo i match con probabilità di successo > 80% teorico</p>
+        
+        {% for m in matches %}
+        <div class="card {{ 'gold-border' if m.is_gold }}">
             <div>
-                <div class="league-tag">{{ match.league }}</div>
-                <div class="match-name">{{ match.match }}</div>
+                <div class="league">{{ m.league }}</div>
+                <div class="teams">{{ m.match }}</div>
+                {% if m.is_gold %}<div class="badge-gold">TOP PICK 🎯</div>{% endif %}
             </div>
-            <div style="text-align: right;">
-                <div class="percent">{{ match.probability }}%</div>
-                <div class="confidence">{{ match.advice }} CONFIDENCE</div>
+            <div style="text-align:right">
+                <div class="perc {{ 'gold-text' if m.is_gold }}">{{ m.probability }}%</div>
+                <div style="font-size: 10px; opacity: 0.8;">OVER 2.5</div>
             </div>
         </div>
         {% endfor %}
