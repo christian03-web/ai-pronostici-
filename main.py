@@ -45,7 +45,22 @@ def get_matches():
                         prediction = "🔥 Alta probabilità Over 2.5"
                     else:
                         prediction = "⚠️ Attenzione"
+# stima semplice attacco/difesa
+home_attack = 1.4
+away_attack = 1.2
 
+# fattore casa
+home_xg = home_attack * 1.10
+away_xg = away_attack * 0.95
+
+over_prob = poisson_over25(home_xg, away_xg)
+
+if over_prob >= 70:
+    prediction = f"🔥 OVER 2.5 FORTE ({over_prob}%)"
+elif over_prob >= 55:
+    prediction = f"🟡 OVER 2.5 POSSIBILE ({over_prob}%)"
+else:
+    prediction = f"🔴 UNDER PROBABILE ({over_prob}%)"
                 matches.append({
                     "home": home,
                     "away": away,
