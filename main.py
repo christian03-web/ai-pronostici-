@@ -3,19 +3,21 @@ import requests
 
 app = Flask(__name__)
 
-LEAGUES = [
-    "ita.1",
-    "eng.1",
-    "esp.1",
-    "ger.1",
-    "fra.1",
-    "uefa.champions"
-]
+LEAGUES = {
+    "Serie A": "ita.1",
+    "Premier League": "eng.1",
+    "La Liga": "esp.1",
+    "Bundesliga": "ger.1",
+    "Ligue 1": "fra.1",
+    "Champions League": "uefa.champions",
+    "Europa League": "uefa.europa",
+    "Conference League": "uefa.europa.conf"
+}
 
 def get_matches():
     matches = []
 
-    for league in LEAGUES:
+    for league_name, league in LEAGUES.items():
         url = f"http://site.api.espn.com/apis/site/v2/sports/soccer/{league}/scoreboard"
         try:
             data = requests.get(url).json()
@@ -47,6 +49,7 @@ def get_matches():
                     "home_score": home_score,
                     "away_score": away_score,
                     "prediction": prediction
+                    "league": league_name,
                 })
         except:
             pass
