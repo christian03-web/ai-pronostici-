@@ -3,39 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Gold Predictor</title>
+    <title>⚡ ULTRA-ANALYTICS AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --gold: #ffd700; --bg: #05070a; --card: #111827; }
-        body { background: var(--bg); color: #f3f4f6; font-family: 'Segoe UI', sans-serif; padding: 15px; }
-        .container { max-width: 480px; margin: auto; }
-        .card { 
-            background: var(--card); border-radius: 12px; padding: 18px; 
-            margin-bottom: 12px; display: flex; justify-content: space-between;
-            align-items: center; border: 1px solid #1f2937;
-        }
-        .gold-border { border: 2px solid var(--gold) !important; box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); }
-        .league { color: #60a5fa; font-size: 11px; font-weight: bold; }
-        .teams { font-size: 15px; font-weight: 600; margin-top: 4px; }
-        .perc { font-size: 26px; font-weight: 900; color: #10b981; }
-        .gold-text { color: var(--gold) !important; }
-        .badge-gold { background: var(--gold); color: black; font-size: 9px; font-weight: 1000; padding: 2px 6px; border-radius: 4px; margin-top: 5px; display: inline-block; }
+        body { background: #000000; color: #ffffff; font-family: 'JetBrains Mono', monospace; }
+        .match-card { background: linear-gradient(145deg, #0f172a, #020617); border: 1px solid #1e293b; transition: 0.3s; }
+        .match-card:hover { border-color: #38bdf8; box-shadow: 0 0 20px rgba(56, 189, 248, 0.2); }
+        .elite { border-color: #f59e0b !important; background: linear-gradient(145deg, #1e1b4b, #020617); }
+        .bar-container { background: #1e293b; height: 4px; border-radius: 2px; margin-top: 8px; }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h2 style="text-align:center; letter-spacing: 2px;">🏆 GOLD SELECTION</h2>
-        <p style="text-align:center; font-size: 12px; opacity: 0.6;">Solo i match con probabilità di successo > 80% teorico</p>
-        
+<body class="p-4">
+    <div class="max-w-2xl mx-auto">
+        <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-4">
+            <h1 class="text-xl font-bold tracking-tighter">⚡ SYSTEM_POWER: MAX</h1>
+            <div class="text-[10px] bg-blue-600 px-2 py-1 rounded">LIVE_FEED_ENABLED</div>
+        </div>
+
         {% for m in matches %}
-        <div class="card {{ 'gold-border' if m.is_gold }}">
-            <div>
-                <div class="league">{{ m.league }}</div>
-                <div class="teams">{{ m.match }}</div>
-                {% if m.is_gold %}<div class="badge-gold">TOP PICK 🎯</div>{% endif %}
+        <div class="match-card p-6 rounded-xl mb-4 {{ 'elite' if m.is_elite }}">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <span class="text-[9px] text-blue-400 font-bold uppercase">{{ m.league }}</span>
+                    <h2 class="text-lg font-bold leading-tight mt-1">{{ m.match }}</h2>
+                </div>
+                {% if m.is_elite %}
+                <span class="text-[#f59e0b] text-[10px] font-bold animate-pulse">● GOLD_PICK</span>
+                {% endif %}
             </div>
-            <div style="text-align:right">
-                <div class="perc {{ 'gold-text' if m.is_gold }}">{{ m.probability }}%</div>
-                <div style="font-size: 10px; opacity: 0.8;">OVER 2.5</div>
+
+            <div class="grid grid-cols-2 gap-8">
+                <div>
+                    <div class="flex justify-between text-[10px] mb-1">
+                        <span>OVER 2.5 PROB</span>
+                        <span class="text-emerald-400">{{ m.over_p }}%</span>
+                    </div>
+                    <div class="bar-container">
+                        <div class="h-full bg-emerald-500 rounded-full" style="width: {{ m.over_p }}%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-[10px] mb-1">
+                        <span>GG (BOTH SCORE)</span>
+                        <span class="text-blue-400">{{ m.gg_p }}%</span>
+                    </div>
+                    <div class="bar-container">
+                        <div class="h-full bg-blue-500 rounded-full" style="width: {{ m.gg_p }}%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 pt-4 border-t border-slate-800 flex justify-between items-center">
+                <span class="text-[10px] text-slate-500">POTENZA ATTACCO: <span class="text-white">HIGH</span></span>
+                <span class="text-[10px] text-slate-500">RATING: <span class="text-white">{{ m.score_potency }}</span></span>
             </div>
         </div>
         {% endfor %}
