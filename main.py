@@ -37,7 +37,8 @@ def get_matches():
                 away_score = teams[1].get("score", "0")
 
                 status = comp["status"]["type"]["description"]
-
+if status != "Scheduled":
+    continue
                 prediction = "⚖️ Normale"
                 if status != "Scheduled":
                     total = int(home_score) + int(away_score)
