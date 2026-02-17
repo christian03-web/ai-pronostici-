@@ -3,60 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI ANALYTICS - MAX POWER</title>
+    <title>AI Total Scanner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #030712; color: white; font-family: 'Inter', sans-serif; }
-        .match-card { background: #111827; border: 1px solid #1f2937; position: relative; overflow: hidden; }
-        .gold-tag { background: linear-gradient(90deg, #f59e0b, #fbbf24); color: black; font-weight: 900; font-size: 10px; padding: 2px 8px; border-radius: 4px; }
-        .bar-bg { background: #374151; height: 6px; border-radius: 3px; }
+        body { background: #0a0c10; color: #e1e7ef; font-family: 'Inter', sans-serif; }
+        .match-row { background: #12151c; border-left: 3px solid #1e293b; transition: 0.2s; }
+        .match-row:hover { background: #1a1f29; border-left-color: #3b82f6; }
+        .top-pick { border-left-color: #f59e0b !important; background: #1e1b4b; }
     </style>
 </head>
-<body class="p-6">
-    <div class="max-w-2xl mx-auto">
-        <header class="mb-10 flex justify-between items-end border-b border-gray-800 pb-4">
-            <div>
-                <h1 class="text-2xl font-black tracking-tighter text-blue-500">AI PREDICTOR <span class="text-white">PRO</span></h1>
-                <p class="text-xs text-gray-500 uppercase">Analisi Dati Real-Time</p>
-            </div>
-            <div class="text-[10px] text-emerald-400 font-mono animate-pulse">● LIVE_SERVER_CONNECTED</div>
-        </header>
-
-        {% for m in matches %}
-        <div class="match-card p-5 rounded-2xl mb-4 transition-transform hover:scale-[1.02]">
-            <div class="flex justify-between items-start mb-6">
-                <div>
-                    <span class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">{{ m.league }}</span>
-                    <h2 class="text-lg font-bold mt-1">{{ m.match }}</h2>
-                </div>
-                {% if m.is_gold %}
-                <div class="gold-tag">GOLD SELECTION</div>
-                {% endif %}
-            </div>
-
-            <div class="space-y-4">
-                <div>
-                    <div class="flex justify-between text-xs mb-1">
-                        <span class="opacity-70 text-[10px]">PROBABILITÀ OVER 2.5</span>
-                        <span class="font-bold text-emerald-400">{{ m.over_p }}%</span>
-                    </div>
-                    <div class="bar-bg">
-                        <div class="h-full bg-emerald-500 rounded-full" style="width: {{ m.over_p }}%"></div>
-                    </div>
-                </div>
-
-                <div>
-                    <div class="flex justify-between text-xs mb-1">
-                        <span class="opacity-70 text-[10px]">PROBABILITÀ GOAL/GOAL (GG)</span>
-                        <span class="font-bold text-blue-400">{{ m.gg_p }}%</span>
-                    </div>
-                    <div class="bar-bg">
-                        <div class="h-full bg-blue-500 rounded-full" style="width: {{ m.gg_p }}%"></div>
-                    </div>
-                </div>
-            </div>
+<body class="p-4 bg-slate-950">
+    <div class="max-w-3xl mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-xl font-black tracking-tight uppercase">Full Match Scanner <span class="text-blue-500">v3.0</span></h1>
+            <span class="text-[9px] bg-slate-800 px-2 py-1 rounded text-slate-400">AGGIORNAMENTO LIVE</span>
         </div>
-        {% endfor %}
+
+        <div class="space-y-2">
+            {% for m in matches %}
+            <div class="match-row p-4 rounded-lg flex items-center justify-between {{ 'top-pick' if m.is_top }}">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[9px] font-bold text-blue-400 uppercase">{{ m.league }}</span>
+                        <span class="text-[9px] text-slate-500">{{ m.status }}</span>
+                    </div>
+                    <h2 class="text-sm font-bold">{{ m.match }}</h2>
+                </div>
+                
+                <div class="flex gap-4 text-center">
+                    <div class="w-16">
+                        <div class="text-[8px] text-slate-500 uppercase">Over 2.5</div>
+                        <div class="text-sm font-black text-emerald-400">{{ m.over_p }}%</div>
+                    </div>
+                    <div class="w-16">
+                        <div class="text-[8px] text-slate-500 uppercase">G/G</div>
+                        <div class="text-sm font-black text-blue-400">{{ m.gg_p }}%</div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
     </div>
 </body>
 </html>
