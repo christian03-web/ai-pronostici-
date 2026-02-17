@@ -1,5 +1,4 @@
 flask
 requests
 scipy
-numpy
 gunicorn
