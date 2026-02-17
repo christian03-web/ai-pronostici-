@@ -40,11 +40,7 @@ def analyze_match(home, away):
 
     if probability >= 72:
         level = "🔥 OVER 2.5 FORTE"
-    elif probability >= 58:
-        level = "🟡 OVER 2.5 POSSIBILE"
-    else:
-        level = "🔴 UNDER PROBABILE"
-
+    
     return probability, level
 
 def get_matches():
