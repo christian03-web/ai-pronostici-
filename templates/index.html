@@ -2,82 +2,85 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI Football Predictor</title>
+<title>AI Over 2.5 Predictor</title>
 
 <style>
 body{
     background:#0b1220;
     color:white;
     font-family:Arial;
+    padding:15px;
+}
+
+.header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.update{
+    color:#9ca3af;
+    font-size:14px;
 }
 
 .league{
-    margin-top:30px;
-}
-
-.league h2{
-    background:#1d4ed8;
-    padding:10px;
-    border-radius:10px;
+    margin-top:25px;
+    font-size:20px;
+    color:#60a5fa;
+    font-weight:bold;
 }
 
 .match{
     background:#111827;
-    padding:15px;
+    padding:14px;
     margin:10px 0;
     border-radius:12px;
 }
 
-.team{
+.teams{
     font-size:18px;
     font-weight:bold;
 }
 
+.prob{
+    font-size:16px;
+    margin-top:6px;
+}
+
 .pred{
-    font-size:20px;
+    font-size:19px;
     margin-top:8px;
 }
-
-.high{color:#22c55e;}
-.mid{color:#facc15;}
-.low{color:#ef4444;}
-
-.refresh{
-    position:fixed;
-    bottom:20px;
-    right:20px;
-    background:#22c55e;
-    padding:12px;
-    border-radius:50%;
-}
 </style>
+
+<script>
+setTimeout(function(){
+    location.reload();
+}, 600000);
+</script>
+
 </head>
 
 <body>
 
-<h1>⚽ AI Over 2.5 Predictor</h1>
+<div class="header">
+<h1>⚽ AI OVER 2.5</h1>
+<div class="update">Aggiornato: {{update}}</div>
+</div>
 
-{% set current = "" %}
-
+{% set last = "" %}
 {% for m in matches %}
-    {% if current != m.league %}
-        {% set current = m.league %}
-        <div class="league">
-        <h2>{{m.league}}</h2>
+    {% if last != m.league %}
+        <div class="league">{{m.league}}</div>
+        {% set last = m.league %}
     {% endif %}
 
     <div class="match">
-        <div class="team">{{m.home}} vs {{m.away}}</div>
-        <div>Stato: {{m.status}}</div>
-        <div>Score: {{m.home_score}} - {{m.away_score}}</div>
-        <div class="pred high">{{m.prediction}}</div>
+        <div class="teams">{{m.home}} vs {{m.away}}</div>
+        <div class="prob">Probabilità Over 2.5: {{m.prob}}%</div>
+        <div class="pred">{{m.prediction}}</div>
     </div>
-
 {% endfor %}
-<script>
-setTimeout(function(){
-   location.reload();
-}, 600000);
-</script>
+
 </body>
 </html>
