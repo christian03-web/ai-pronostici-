@@ -1,6 +1,10 @@
 from flask import Flask, render_template
 import requests
-
+import math
+def poisson_over25(home_xg, away_xg):
+    lam = home_xg + away_xg
+    prob = 1 - (math.exp(-lam) * (1 + lam + (lam**2)/2))
+    return round(prob * 100, 1)
 app = Flask(__name__)
 
 LEAGUES = {
