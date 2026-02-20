@@ -1,46 +1,27 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
-    <title>AI Soccer Analyzer</title>
+    <meta charset="UTF-8">
+    <title>AI Soccer Predictor</title>
     <style>
-        body {
-            background: #0f172a;
-            color: white;
-            font-family: Arial;
-            padding: 20px;
-        }
-
-        h1 { color: #22c55e; }
-
-        .card {
-            background: #1e293b;
-            padding: 18px;
-            margin-top: 15px;
-            border-radius: 10px;
-        }
-
-        .gg { color: #4ade80; }
-        .over { color: #60a5fa; }
-        .update { color: #94a3b8; }
+        body { font-family: sans-serif; background: #121212; color: white; padding: 20px; }
+        .card { background: #1e1e1e; border-radius: 10px; padding: 15px; margin-bottom: 10px; border-left: 5px solid #00ff88; }
+        .badge { padding: 5px 10px; border-radius: 5px; font-weight: bold; }
+        .high { background: #00ff88; color: black; }
+        .medium { background: #ffaa00; color: black; }
     </style>
 </head>
 <body>
-
-<h1>⚽ AI Betting Analyzer</h1>
-<p class="update">Ultimo aggiornamento: {{ update }}</p>
-
-{% if predictions|length == 0 %}
-<h2>Nessuna partita interessante oggi</h2>
-{% endif %}
-
-{% for match in predictions %}
-<div class="card">
-    <h2>{{ match.home }} vs {{ match.away }}</h2>
-    <p>Lega: {{ match.league }}</p>
-    <p class="gg">Probabilità GG: {{ match.gg }}%</p>
-    <p class="over">Probabilità Over 2.5: {{ match.over25 }}%</p>
-</div>
-{% endfor %}
-
+    <h1>⚽ AI Match Analyzer</h1>
+    <div id="container">
+        {% for p in predictions %}
+        <div class="card">
+            <h3>{{ p.league }}: {{ p.match }}</h3>
+            <p>Posizione Classifica: {{ p.home_rank }}° vs {{ p.away_rank }}°</p>
+            <p>Probabilità <strong>GG</strong>: <span class="badge {{ 'high' if p.gg_prob == 'ALTA' else 'medium' }}">{{ p.gg_prob }}</span></p>
+            <p>Probabilità <strong>Over 2.5</strong>: <span class="badge {{ 'high' if p.over_prob == 'ALTA' else 'medium' }}">{{ p.over_prob }}</span></p>
+        </div>
+        {% endfor %}
+    </div>
 </body>
 </html>
