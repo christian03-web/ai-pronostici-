@@ -3,56 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI SOCCER PREDICTOR</title>
+    <title>LIVE AI PREDICTOR</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #070a13; color: #e2e8f0; font-family: 'Inter', sans-serif; }
-        .match-card { background: linear-gradient(145deg, #111827, #1f2937); border: 1px solid #374151; }
-        .prob-high { color: #10b981; font-weight: 800; }
-        .prob-mid { color: #f59e0b; }
+        body { background: #05070a; color: #f1f5f9; font-family: 'Inter', sans-serif; }
+        .card-live { border: 1px solid #ef4444; background: rgba(239, 68, 68, 0.05); }
+        .card-normal { border: 1px solid #1e293b; background: #0f172a; }
+        .pulse { animation: pulse-animation 2s infinite; }
+        @keyframes pulse-animation { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
     </style>
+    <meta http-equiv="refresh" content="60">
 </head>
-<body class="p-4">
+<body class="p-4 md:p-8">
     <div class="max-w-5xl mx-auto">
-        <div class="flex justify-between items-end mb-8 border-b border-gray-700 pb-4">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
             <div>
-                <h1 class="text-3xl font-black text-white tracking-tighter">PREDICTOR <span class="text-blue-500">AI</span></h1>
-                <p class="text-gray-400 text-sm">Analisi statistica avanzata tornei europei</p>
+                <h1 class="text-4xl font-black italic tracking-tighter text-white">LIVE <span class="text-red-600 font-normal">STATS</span></h1>
+                <p class="text-gray-500 text-sm italic font-bold">Aggiornamento automatico ogni 60s</p>
             </div>
-            <div class="text-right">
-                <span class="bg-blue-600 text-white text-xs px-3 py-1 rounded-full font-bold">OGGI: {{ date }}</span>
+            <div class="bg-gray-800 px-4 py-2 rounded-lg border border-gray-700">
+                <span class="text-gray-400 text-xs uppercase block">Data Odierna</span>
+                <span class="font-mono font-bold text-blue-400">{{ date }}</span>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             {% for p in predictions %}
-            <div class="match-card rounded-xl p-4 shadow-lg">
-                <div class="flex justify-between text-[10px] uppercase tracking-widest text-gray-500 mb-3 font-bold">
-                    <span>{{ p.league }}</span>
-                    <span>{{ p.time }}</span>
+            <div class="rounded-2xl p-5 shadow-2xl transition-all {{ 'card-live' if p.is_live else 'card-normal' }}">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">{{ p.league }}</span>
+                    {% if p.is_live %}
+                        <span class="flex items-center text-red-500 text-[10px] font-black pulse">
+                            <span class="w-2 h-2 bg-red-500 rounded-full mr-1"></span> LIVE {{ p.clock }}
+                        </span>
+                    {% elif p.is_final %}
+                        <span class="text-gray-500 text-[10px] font-bold">FINALE</span>
+                    {% else %}
+                        <span class="text-gray-400 text-[10px] font-bold">{{ p.clock }}</span>
+                    {% endif %}
                 </div>
                 
-                <div class="flex items-center justify-between mb-5">
-                    <div class="flex flex-col items-center w-24">
-                        <img src="{{ p.logo_h }}" class="w-12 h-12 mb-1">
-                        <span class="text-xs font-bold text-center">{{ p.home_name }}</span>
+                <div class="flex items-center justify-between gap-2 mb-6">
+                    <div class="w-1/3 text-center">
+                        <img src="{{ p.logo_h }}" class="w-12 h-12 mx-auto mb-2 object-contain">
+                        <div class="text-[11px] font-bold uppercase truncate">{{ p.home_name }}</div>
                     </div>
-                    <div class="text-xl font-black text-gray-600 italic px-2">VS</div>
-                    <div class="flex flex-col items-center w-24">
-                        <img src="{{ p.logo_a }}" class="w-12 h-12 mb-1">
-                        <span class="text-xs font-bold text-center">{{ p.away_name }}</span>
+                    
+                    <div class="flex flex-col items-center">
+                        <div class="text-3xl font-black flex items-center gap-3">
+                            <span class="{{ 'text-white' if p.is_live else 'text-gray-400' }}">{{ p.score_h }}</span>
+                            <span class="text-gray-700 text-xl">-</span>
+                            <span class="{{ 'text-white' if p.is_live else 'text-gray-400' }}">{{ p.score_a }}</span>
+                        </div>
+                    </div>
+
+                    <div class="w-1/3 text-center">
+                        <img src="{{ p.logo_a }}" class="w-12 h-12 mx-auto mb-2 object-contain">
+                        <div class="text-[11px] font-bold uppercase truncate">{{ p.away_name }}</div>
                     </div>
                 </div>
 
-                <div class="flex gap-4 border-t border-gray-700 pt-3">
-                    <div class="flex-1 text-center">
-                        <div class="text-[10px] text-gray-400 uppercase">Prob. GG</div>
-                        <div class="text-lg {{ 'prob-high' if p.gg > 70 else 'prob-mid' }}">{{ p.gg }}%</div>
+                <div class="grid grid-cols-2 gap-4 border-t border-gray-800 pt-4">
+                    <div class="bg-black/30 rounded-lg p-2 text-center">
+                        <div class="text-[9px] text-gray-500 uppercase font-bold">Prob. GG</div>
+                        <div class="text-lg font-black text-amber-500">{{ p.gg }}%</div>
                     </div>
-                    <div class="w-[1px] bg-gray-700"></div>
-                    <div class="flex-1 text-center">
-                        <div class="text-[10px] text-gray-400 uppercase">Prob. Over 2.5</div>
-                        <div class="text-lg {{ 'prob-high' if p.over > 70 else 'prob-mid' }}">{{ p.over }}%</div>
+                    <div class="bg-black/30 rounded-lg p-2 text-center">
+                        <div class="text-[9px] text-gray-500 uppercase font-bold">Prob. Over 2.5</div>
+                        <div class="text-lg font-black text-blue-500">{{ p.over }}%</div>
                     </div>
                 </div>
             </div>
