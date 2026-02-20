@@ -1,103 +1,46 @@
 <!DOCTYPE html>
-<html lang="it">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI ANALYST - LIVE SCAN</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-[#020617] text-slate-300 p-4">
-    <div class="max-w-xl mx-auto">
-        <header class="py-6 border-b border-slate-800 mb-6 flex justify-between items-center">
-            <div>
-                <h1 class="text-xl font-black text-white italic uppercase tracking-tighter">AI Soccer Intelligence</h1>
-                <p class="text-[9px] text-slate-500 uppercase tracking-widest font-bold">Analisi xG & Poisson Distribution</p>
-            </div>
-            <div id="status-dot" class="flex items-center gap-2">
-                <span class="text-[9px] font-bold text-emerald-500 uppercase">Engine Live</span>
-                <div class="h-2 w-2 bg-emerald-500 rounded-full animate-pulse"></div>
-            </div>
-        </header>
-
-        <div id="container" class="space-y-4">
-            {% for m in matches %}
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl relative overflow-hidden">
-                {% if m.is_live %}
-                <div class="absolute top-0 right-0 bg-red-600 text-white text-[8px] px-3 py-1 font-black uppercase rounded-bl-lg animate-pulse">Live</div>
-                {% endif %}
-                
-                <div class="mb-4">
-                    <span class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">{{ m.league }}</span>
-                    <h2 class="text-sm font-bold text-white mt-1">{{ m.match }}</h2>
-                    <p class="text-[9px] text-slate-500">{{ m.time }} | xG Est: {{ m.xg }}</p>
-                </div>
-
-                <div class="flex justify-between items-center mb-5 bg-black/30 p-3 rounded-xl border border-white/5">
-                    <span class="text-2xl font-black text-yellow-500">{{ m.score }}</span>
-                    <div class="text-right">
-                        <p class="text-[8px] text-slate-500 uppercase font-bold">Trend Analisi</p>
-                        <p class="text-[10px] font-bold text-emerald-500">ALTA COERENZA</p>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
-                        <p class="text-[8px] text-slate-500 uppercase font-bold mb-1">Over 2.5</p>
-                        <span class="text-xl font-black text-emerald-400">{{ m.over_p }}%</span>
-                    </div>
-                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
-                        <p class="text-[8px] text-slate-500 uppercase font-bold mb-1">GG</p>
-                        <span class="text-xl font-black text-blue-400">{{ m.gg_p }}%</span>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-
-            {% if not matches %}
-            <div class="text-center py-20 bg-slate-900/50 rounded-3xl border border-dashed border-slate-800">
-                <p class="text-sm text-slate-500 italic">Nessun match trovato per i parametri impostati.<br>In attesa dei match serali (Serie A, Bundesliga, LaLiga).</p>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <script>
-        async function update() {
-            try {
-                const r = await fetch('/api/updates');
-                const data = await r.json();
-                if(data.length > 0) {
-                    const container = document.getElementById('container');
-                    container.innerHTML = data.map(m => `
-                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl relative overflow-hidden mb-4">
-                            ${m.is_live ? '<div class="absolute top-0 right-0 bg-red-600 text-white text-[8px] px-3 py-1 font-black uppercase rounded-bl-lg animate-pulse">Live</div>' : ''}
-                            <div class="mb-4">
-                                <span class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">${m.league}</span>
-                                <h2 class="text-sm font-bold text-white mt-1">${m.match}</h2>
-                                <p class="text-[9px] text-slate-500">${m.time} | xG Est: ${m.xg}</p>
-                            </div>
-                            <div class="flex justify-between items-center mb-5 bg-black/30 p-3 rounded-xl border border-white/5">
-                                <span class="text-2xl font-black text-yellow-500">${m.score}</span>
-                                <div class="text-right">
-                                    <p class="text-[8px] text-slate-500 uppercase font-bold">Trend Analisi</p>
-                                    <p class="text-[10px] font-bold text-emerald-500 uppercase italic">Coerente</p>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-3">
-                                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
-                                    <p class="text-[8px] text-slate-500 uppercase font-bold mb-1">Over 2.5</p>
-                                    <span class="text-xl font-black text-emerald-400">${m.over_p}%</span>
-                                </div>
-                                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
-                                    <p class="text-[8px] text-slate-500 uppercase font-bold mb-1">GG</p>
-                                    <span class="text-xl font-black text-blue-400">${m.gg_p}%</span>
-                                </div>
-                            </div>
-                        </div>`).join('');
-                }
-            } catch(e) { console.log("Sync error"); }
+    <title>AI Soccer Analyzer</title>
+    <style>
+        body {
+            background: #0f172a;
+            color: white;
+            font-family: Arial;
+            padding: 20px;
         }
-        setInterval(update, 30000);
-    </script>
+
+        h1 { color: #22c55e; }
+
+        .card {
+            background: #1e293b;
+            padding: 18px;
+            margin-top: 15px;
+            border-radius: 10px;
+        }
+
+        .gg { color: #4ade80; }
+        .over { color: #60a5fa; }
+        .update { color: #94a3b8; }
+    </style>
+</head>
+<body>
+
+<h1>⚽ AI Betting Analyzer</h1>
+<p class="update">Ultimo aggiornamento: {{ update }}</p>
+
+{% if predictions|length == 0 %}
+<h2>Nessuna partita interessante oggi</h2>
+{% endif %}
+
+{% for match in predictions %}
+<div class="card">
+    <h2>{{ match.home }} vs {{ match.away }}</h2>
+    <p>Lega: {{ match.league }}</p>
+    <p class="gg">Probabilità GG: {{ match.gg }}%</p>
+    <p class="over">Probabilità Over 2.5: {{ match.over25 }}%</p>
+</div>
+{% endfor %}
+
 </body>
 </html>
