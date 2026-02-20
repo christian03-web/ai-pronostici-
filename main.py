@@ -29,8 +29,9 @@ def get_ai_prediction(home_team, away_team):
     h_w, h_l, h_d = parse_record(home_team)
     a_w, a_l, a_d = parse_record(away_team)
     
-    gg_calc = 55 + (h_l * 1.2) + (a_l * 1.2) - (h_d * 3)
-    over_calc = 50 + (h_w * 2.1) + (a_w * 2.1) - (h_d * 4)
+    # Algoritmo calibrato per essere più severo
+    gg_calc = 55 + (h_l * 1.3) + (a_l * 1.3) - (h_d * 4)
+    over_calc = 50 + (h_w * 2.2) + (a_w * 2.2) - (h_d * 5)
     
     return round(max(10, min(96, gg_calc)), 1), round(max(10, min(96, over_calc)), 1)
 
@@ -45,37 +46,36 @@ def index():
             res = requests.get(url, timeout=5).json()
             for event in res.get('events', []):
                 comp = event['competitions'][0]
-                home = comp['competitors'][0]
-                away = comp['competitors'][1]
-                
-                # DATI LIVE
-                score_h = home.get('score', '0')
-                score_a = away.get('score', '0')
-                status_type = event['status']['type']['name'] # es: STATUS_IN_PROGRESS, STATUS_FINAL
-                live_clock = event['status']['type']['shortDetail'] # es: "72'", "HT", "21:00"
-                
-                is_live = status_type == "STATUS_IN_PROGRESS"
+                home, away = comp['competitors'][0], comp['competitors'][1]
                 
                 gg_prob, over_prob = get_ai_prediction(home, away)
                 
-                all_matches.append({
-                    'league': league_name,
-                    'match_name': event['name'],
-                    'home_name': home['team']['shortDisplayName'],
-                    'away_name': away['team']['shortDisplayName'],
-                    'logo_h': home['team'].get('logo'),
-                    'logo_a': away['team'].get('logo'),
-                    'score_h': score_h,
-                    'score_a': score_a,
-                    'clock': live_clock,
-                    'is_live': is_live,
-                    'is_final': status_type == "STATUS_FINAL",
-                    'gg': gg_prob,
-                    'over': over_prob
-                })
+                # SOGLIA DI QUALITÀ: Almeno uno dei due deve essere >= 70%
+                if gg_prob >= 70 or over_prob >= 70:
+                    all_matches.append({
+                        'league': league_name,
+                        'match_name': event['name'],
+                        'home_name': home['team']['shortDisplayName'],
+                        'away_name': away['team']['shortDisplayName'],
+                        'logo_h': home['team'].get('logo'),
+                        'logo_a': away['team'].get('logo'),
+                        'score_h': home.get('score', '0'),
+                        'score_a': away.get('score', '0'),
+                        'clock': event['status']['type']['shortDetail'],
+                        'is_live': event['status']['type']['name'] == "STATUS_IN_PROGRESS",
+                        'gg': gg_prob,
+                        'over': over_prob,
+                        'total_quality': gg_prob + over_prob # Usato per il ranking
+                    })
         except: continue
     
-    return render_template('index.html', predictions=all_matches, date=datetime.now().strftime('%d/%m/%Y'))
+    # 1. Ordina per qualità decrescente
+    all_matches = sorted(all_matches, key=lambda x: x['total_quality'], reverse=True)
+    
+    # 2. Prendi solo le prime 8 partite migliori
+    top_8_matches = all_matches[:8]
+    
+    return render_template('index.html', predictions=top_8_matches, date=datetime.now().strftime('%d/%m/%Y'))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
