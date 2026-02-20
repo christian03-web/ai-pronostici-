@@ -3,64 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GOLDEN TICKET AI</title>
+    <title>AI LIVE SCANNER</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #020617; color: white; font-family: sans-serif; }
+        .match-card { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; }
+        .live-dot { height: 8px; width: 8px; background-color: #ef4444; border-radius: 50%; display: inline-block; margin-right: 5px; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    </style>
 </head>
-<body class="bg-slate-950 text-white font-sans p-4">
-    <div class="max-w-md mx-auto">
-        <div class="text-center mb-6">
-            <h1 class="text-2xl font-black text-yellow-500 italic uppercase tracking-tighter">Golden Ticket AI</h1>
-            <div class="inline-block bg-yellow-500/20 text-yellow-500 text-[10px] px-2 py-0.5 rounded-full font-bold">LIVE DAILY RESET</div>
-        </div>
+<body class="p-4">
+    <div class="max-w-xl mx-auto">
+        <header class="mb-6 flex justify-between items-center border-b border-slate-800 pb-4">
+            <h1 class="text-xl font-black text-blue-500 italic uppercase">Live AI Scanner</h1>
+            <div id="status" class="text-[10px] text-slate-500 font-mono italic">SYNCING...</div>
+        </header>
 
-        <div class="bg-slate-900 border-2 border-dashed border-slate-700 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-4 mb-4">
-                <div>
-                    <span class="text-[10px] text-slate-400 block uppercase">Data Schedina</span>
-                    <span class="text-sm font-bold">{{ date }}</span>
+        <div id="match-container" class="space-y-4">
+            {% for m in matches %}
+            <div class="match-card p-4">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-[10px] text-blue-400 font-bold uppercase">{{ m.league }}</span>
+                    <span class="text-[10px] text-slate-400 font-bold">
+                        {% if m.is_live %}<span class="live-dot"></span>LIVE {% endif %}{{ m.time }}
+                    </span>
                 </div>
-                <div class="text-right">
-                    <span class="text-[10px] text-slate-400 block uppercase">Mercato</span>
-                    <span class="text-sm font-bold text-yellow-500">OVER 2.5 GOAL</span>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-sm font-bold w-1/2">{{ m.match }}</h2>
+                    <div class="text-lg font-black text-yellow-500 bg-black/40 px-3 py-1 rounded">{{ m.score }}</div>
                 </div>
-            </div>
-
-            <div class="space-y-4">
-                {% for m in slip %}
-                <div class="flex justify-between items-center border-b border-slate-800/50 pb-2">
-                    <div class="flex-1">
-                        <div class="flex items-center gap-2">
-                            <span class="text-[9px] text-blue-400 font-bold uppercase">{{ m.league }}</span>
-                            <span class="text-[8px] bg-blue-500/10 text-blue-300 px-1 rounded">OGGI</span>
-                        </div>
-                        <div class="text-xs font-bold">{{ m.match }}</div>
-                        <div class="text-[9px] text-slate-500 italic">{{ m.time }}</div>
+                <div class="grid grid-cols-2 gap-4 border-t border-slate-800 pt-3">
+                    <div class="text-center">
+                        <div class="text-[9px] opacity-50 uppercase">Over 2.5</div>
+                        <div class="text-emerald-400 font-bold">{{ m.over_p }}%</div>
                     </div>
-                    <div class="text-right">
-                        <div class="text-sm font-black text-emerald-400">{{ m.prob }}%</div>
+                    <div class="text-center">
+                        <div class="text-[9px] opacity-50 uppercase">GG Prob</div>
+                        <div class="text-blue-400 font-bold">{{ m.gg_p }}%</div>
                     </div>
                 </div>
-                {% endfor %}
-                
-                {% if slip|length == 0 %}
-                <div class="text-center py-10">
-                    <p class="text-slate-500 italic text-sm text-center">Nessun match di alto livello trovato per oggi.<br>Il sistema si aggiorna automaticamente.</p>
-                </div>
-                {% endif %}
             </div>
-
-            {% if slip|length >= 1 %}
-            <div class="mt-6 pt-4 border-t-2 border-dashed border-slate-800 text-center">
-                <div class="text-xs text-slate-400 mb-1 uppercase tracking-widest">Affidabilità stimata</div>
-                <div class="text-3xl font-black text-emerald-500 tracking-tighter">98.5% SCORE</div>
-            </div>
-            {% endif %}
+            {% endfor %}
         </div>
-        
-        <p class="text-[9px] text-center mt-6 text-slate-600 uppercase tracking-widest leading-relaxed">
-            Analisi basata su distribuzione di poisson e dati live espn.<br>
-            Le probabilità non garantiscono vincite certe.
-        </p>
     </div>
+
+    <script>
+        async function updateScores() {
+            document.getElementById('status').innerText = 'UPDATING...';
+            try {
+                const response = await fetch('/api/updates');
+                const data = await response.json();
+                const container = document.getElementById('match-container');
+                container.innerHTML = '';
+                
+                data.forEach(m => {
+                    const card = `
+                        <div class="match-card p-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="text-[10px] text-blue-400 font-bold uppercase">${m.league}</span>
+                                <span class="text-[10px] text-slate-400 font-bold">
+                                    ${m.is_live ? '<span class="live-dot"></span>LIVE ' : ''}${m.time}
+                                </span>
+                            </div>
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-sm font-bold w-1/2">${m.match}</h2>
+                                <div class="text-lg font-black text-yellow-500 bg-black/40 px-3 py-1 rounded">${m.score}</div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 border-t border-slate-800 pt-3">
+                                <div class="text-center">
+                                    <div class="text-[9px] opacity-50 uppercase">Over 2.5</div>
+                                    <div class="text-emerald-400 font-bold">${m.over_p}%</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-[9px] opacity-50 uppercase">GG Prob</div>
+                                    <div class="text-blue-400 font-bold">${m.gg_p}%</div>
+                                </div>
+                            </div>
+                        </div>`;
+                    container.innerHTML += card;
+                });
+                document.getElementById('status').innerText = 'LIVE SYNCED';
+            } catch (err) {
+                document.getElementById('status').innerText = 'CONNECTION ERROR';
+            }
+        }
+
+        // Aggiorna ogni 30 secondi
+        setInterval(updateScores, 30000);
+    </script>
 </body>
 </html>
