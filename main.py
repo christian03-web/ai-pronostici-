@@ -1,85 +1,169 @@
+from fastapi import FastAPI, Request
+from fastapi.templating import Jinja2Templates
 import requests
-from flask import Flask, render_template, jsonify
-from scipy.stats import poisson
-from datetime import datetime, timedelta
+import numpy as np
+from datetime import datetime
 import pytz
-from concurrent.futures import ThreadPoolExecutor
+from apscheduler.schedulers.background import BackgroundScheduler
 
-app = Flask(__name__)
-ITALY_TZ = pytz.timezone('Europe/Rome')
+app = FastAPI()
+templates = Jinja2Templates(directory="templates")
 
-LEAGUES = {
-    'Serie A': 'ita.1', 'Serie B': 'ita.2', 'Premier League': 'eng.1',
-    'Bundesliga': 'ger.1', 'Eredivisie': 'ned.1', 'LaLiga': 'esp.1',
-    'Champions': 'uefa.champions', 'Europa League': 'uefa.europa', 'Conference': 'uefa.conf'
-}
+LEAGUES = ["eng.1", "ita.1", "esp.1", "ger.1", "fra.1"]
 
-def calculate_dynamic_probability(event, league_name):
+DAILY_PREDICTIONS = []
+LAST_UPDATE = None
+
+italy = pytz.timezone("Europe/Rome")
+
+
+# -------- DATA ITALIANA --------
+def today_italy():
+    return datetime.now(italy).strftime("%Y%m%d")
+
+
+# -------- SCOREBOARD --------
+def get_scoreboard(league, date):
+    url = f"http://site.api.espn.com/apis/site/v2/sports/soccer/{league}/scoreboard?dates={date}"
+    r = requests.get(url, timeout=20)
+    if r.status_code == 200:
+        return r.json()
+    return None
+
+
+# -------- STATISTICHE SQUADRA --------
+def get_team_stats(league, team_id):
+    url = f"http://site.api.espn.com/apis/site/v2/sports/soccer/{league}/teams/{team_id}/statistics"
+    r = requests.get(url, timeout=20)
+
+    if r.status_code != 200:
+        return None
+
+    data = r.json()
+
     try:
-        comp = event['competitions'][0]
-        h_team = comp['competitors'][0]
-        a_team = comp['competitors'][1]
-        
-        # Pesi campionati
-        league_multipliers = {'Bundesliga': 1.4, 'Eredivisie': 1.35, 'Premier League': 1.2, 'Serie A': 1.1, 'LaLiga': 1.05, 'Serie B': 0.85}
-        l_mult = league_multipliers.get(league_name, 1.1)
+        stats = data["statistics"]["splits"]["categories"]
 
-        h_rank = int(h_team.get('curatedRank', {}).get('current', 12))
-        a_rank = int(a_team.get('curatedRank', {}).get('current', 13))
+        shots = 0
+        shots_on_target = 0
+        goals_for = 0
+        goals_against = 0
+        games = 1
 
-        # Calcolo xG specifico per i due team
-        xg_h = ((21 - h_rank) / 8) * l_mult
-        xg_a = ((21 - a_rank) / 9) * l_mult
-        total_xg = max(1.5, xg_h + xg_a) # Minimo garantito per evitare prob. 0
+        for category in stats:
+            for item in category["stats"]:
+                name = item["name"]
 
-        # Poisson Over 2.5
-        over_p = round((1 - sum([poisson.pmf(i, total_xg) for i in range(3)])) * 100, 1)
-        # Poisson GG
-        gg_p = round(((1 - poisson.pmf(0, xg_h)) * (1 - poisson.pmf(0, xg_a))) * 100, 1)
+                if name == "shots":
+                    shots = float(item["value"])
+                if name == "shotsOnTarget":
+                    shots_on_target = float(item["value"])
+                if name == "goals":
+                    goals_for = float(item["value"])
+                if name == "goalsAgainst":
+                    goals_against = float(item["value"])
+                if name == "gamesPlayed":
+                    games = float(item["value"])
+
+        # medie per partita
+        shots /= games
+        shots_on_target /= games
+        goals_for /= games
+        goals_against /= games
+
+        # xG stimato
+        xg = (shots_on_target * 0.30) + (shots * 0.10)
 
         return {
-            'league': league_name,
-            'match': event['name'],
-            'score': f"{h_team['score']} - {a_team['score']}",
-            'time': event['status']['type']['shortDetail'],
-            'is_live': event['status']['type']['state'] == 'in',
-            'over_p': over_p,
-            'gg_p': gg_p,
-            'xg': round(total_xg, 2),
-            'confidence': (over_p + gg_p) / 2
+            "xg": xg,
+            "goals_for": goals_for,
+            "goals_against": goals_against
         }
-    except: return None
 
-def fetch_all_matches():
-    today = datetime.now(ITALY_TZ).strftime("%Y%m%d")
-    tomorrow = (datetime.now(ITALY_TZ) + timedelta(days=1)).strftime("%Y%m%d")
-    pool = []
+    except:
+        return None
 
-    def get_league(item):
-        name, l_id = item
-        # Cerchiamo sia oggi che domani per coprire i match serali/notturni
-        url = f"http://site.api.espn.com/apis/site/v2/sports/soccer/{l_id}/scoreboard?dates={today}-{tomorrow}"
-        try:
-            r = requests.get(url, timeout=4).json()
-            return [calculate_dynamic_probability(e, name) for e in r.get('events', [])]
-        except: return []
 
-    with ThreadPoolExecutor(max_workers=5) as exec:
-        results = exec.map(get_league, LEAGUES.items())
-        for r in results:
-            pool.extend([m for m in r if m])
+# -------- POISSON --------
+def poisson_simulation(home_xg, away_xg, sims=10000):
+    home_goals = np.random.poisson(home_xg, sims)
+    away_goals = np.random.poisson(away_xg, sims)
 
-    # Ordiniamo: Prima i LIVE, poi i più probabili
-    return sorted(pool, key=lambda x: (x['is_live'], x['confidence']), reverse=True)[:15]
+    gg = np.sum((home_goals > 0) & (away_goals > 0)) / sims * 100
+    over25 = np.sum((home_goals + away_goals >= 3)) / sims * 100
 
-@app.route('/')
-def index():
-    matches = fetch_all_matches()
-    return render_template('index.html', matches=matches)
+    return round(gg, 2), round(over25, 2)
 
-@app.route('/api/updates')
-def updates():
-    return jsonify(fetch_all_matches())
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000)
+# -------- COSTRUZIONE PREVISIONI --------
+def build_daily_predictions():
+    global DAILY_PREDICTIONS, LAST_UPDATE
+
+    date = today_italy()
+    predictions = []
+
+    print("Analisi reale del:", date)
+
+    for league in LEAGUES:
+        data = get_scoreboard(league, date)
+        if not data or "events" not in data:
+            continue
+
+        for event in data["events"]:
+            try:
+                comp = event["competitions"][0]["competitors"]
+
+                home = comp[0]
+                away = comp[1]
+
+                home_team = home["team"]["displayName"]
+                away_team = away["team"]["displayName"]
+
+                home_id = home["team"]["id"]
+                away_id = away["team"]["id"]
+
+                # recupero statistiche reali
+                home_stats = get_team_stats(league, home_id)
+                away_stats = get_team_stats(league, away_id)
+
+                if not home_stats or not away_stats:
+                    continue
+
+                # forza attacco/difesa
+                home_xg = (home_stats["xg"] + away_stats["goals_against"]) / 2
+                away_xg = (away_stats["xg"] + home_stats["goals_against"]) / 2
+
+                gg, over25 = poisson_simulation(home_xg, away_xg)
+
+                if gg >= 72 or over25 >= 70:
+                    predictions.append({
+                        "league": league,
+                        "home": home_team,
+                        "away": away_team,
+                        "gg": gg,
+                        "over25": over25
+                    })
+
+            except:
+                continue
+
+    DAILY_PREDICTIONS = predictions
+    LAST_UPDATE = datetime.now(italy)
+
+
+# aggiornamento automatico
+scheduler = BackgroundScheduler(timezone=italy)
+scheduler.add_job(build_daily_predictions, 'cron', hour=0, minute=5)
+scheduler.start()
+
+# primo avvio
+build_daily_predictions()
+
+
+@app.get("/")
+def home(request: Request):
+    return templates.TemplateResponse("index.html", {
+        "request": request,
+        "predictions": DAILY_PREDICTIONS,
+        "update": LAST_UPDATE
+    })
