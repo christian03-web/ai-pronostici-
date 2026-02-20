@@ -5,97 +5,85 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI ANALYST PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background: #010409; color: #c9d1d9; font-family: sans-serif; }
-        .match-card { background: #0d1117; border: 1px solid #30363d; border-radius: 12px; }
-        .live-label { color: #f85149; font-weight: bold; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-    </style>
 </head>
-<body class="p-4 md:p-10">
-    <div class="max-w-4xl mx-auto">
-        <header class="flex justify-between items-center mb-8 border-b border-gray-800 pb-4">
-            <h1 class="text-xl font-bold text-white tracking-tight italic">AI SOCCER ANALYST <span class="text-blue-500 font-mono text-xs">v4.1</span></h1>
-            <div id="status" class="text-[9px] font-mono text-gray-500">SYSTEM READY</div>
+<body class="bg-[#010409] text-[#c9d1d9] font-sans p-4">
+    <div class="max-w-2xl mx-auto">
+        <header class="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
+            <h1 class="text-xl font-bold text-white italic">AI Intelligence Scanner</h1>
+            <span class="text-[10px] bg-blue-500/10 text-blue-500 px-2 py-1 rounded">FAST SYNC</span>
         </header>
 
-        {% if not matches %}
-        <div class="text-center p-20 bg-gray-900/20 rounded-3xl border border-dashed border-gray-800">
-            <p class="text-gray-500 italic">Nessuna partita in programma o live per i campionati selezionati in questo momento.</p>
-            <p class="text-[10px] mt-2 uppercase tracking-widest text-gray-600">Verifica: Serie A, B, Premier, Bundesliga, Liga, Eredivisie, Coppe</p>
-        </div>
-        {% endif %}
-
-        <div id="match-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div id="container" class="space-y-4">
             {% for m in matches %}
-            <div class="match-card p-5">
-                <div class="flex justify-between items-start mb-3">
-                    <span class="text-[10px] text-blue-400 font-bold uppercase tracking-widest">{{ m.league }}</span>
-                    <span class="text-[10px] {{ 'live-label' if m.is_live else 'text-gray-500' }}">{{ m.time }}</span>
+            <div class="bg-[#0d1117] border border-[#30363d] rounded-xl p-4">
+                <div class="flex justify-between text-[10px] mb-2">
+                    <span class="text-blue-400 font-bold uppercase">{{ m.league }}</span>
+                    <span class="{{ 'text-red-500 font-bold' if m.is_live else 'text-gray-500' }}">{{ m.time }}</span>
                 </div>
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-sm font-bold text-white w-2/3">{{ m.match }}</h2>
+                    <span class="text-sm font-bold text-white">{{ m.match }}</span>
                     <span class="text-lg font-black text-yellow-500">{{ m.score }}</span>
                 </div>
-                
-                <div class="grid grid-cols-3 gap-2 text-center border-y border-gray-800 py-3 mb-4">
-                    <div><p class="text-[8px] text-gray-500 uppercase">xG Est.</p><p class="text-xs font-bold text-blue-300">{{ m.xg }}</p></div>
+                <div class="grid grid-cols-3 gap-2 border-y border-gray-800 py-3 mb-3 text-center">
+                    <div><p class="text-[8px] text-gray-500 uppercase">xG</p><p class="text-xs font-bold text-blue-300">{{ m.xg }}</p></div>
                     <div><p class="text-[8px] text-gray-500 uppercase">Rank</p><p class="text-xs font-bold text-gray-400">{{ m.h_rank }} vs {{ m.a_rank }}</p></div>
-                    <div><p class="text-[8px] text-gray-500 uppercase">Urg.</p><p class="text-[8px] font-bold">{{ m.urgency }}</p></div>
+                    <div><p class="text-[8px] text-gray-500 uppercase">Trend</p><p class="text-[8px] font-bold text-emerald-500">STABILE</p></div>
                 </div>
-
-                <div class="flex gap-4">
-                    <div class="flex-1 text-center bg-emerald-500/5 p-2 rounded-lg border border-emerald-500/10">
-                        <span class="text-[8px] text-emerald-500 uppercase font-bold">Over 2.5</span>
-                        <p class="text-lg font-black text-emerald-400">{{ m.over_p }}%</p>
+                <div class="flex gap-2">
+                    <div class="flex-1 bg-emerald-500/5 p-2 rounded border border-emerald-500/10 text-center">
+                        <p class="text-[8px] text-emerald-500 font-bold uppercase">Over 2.5</p>
+                        <p class="text-md font-black text-emerald-400">{{ m.over_p }}%</p>
                     </div>
-                    <div class="flex-1 text-center bg-blue-500/5 p-2 rounded-lg border border-blue-500/10">
-                        <span class="text-[8px] text-blue-500 uppercase font-bold">GG (Goal)</span>
-                        <p class="text-lg font-black text-blue-400">{{ m.gg_p }}%</p>
+                    <div class="flex-1 bg-blue-500/5 p-2 rounded border border-blue-500/10 text-center">
+                        <p class="text-[8px] text-blue-500 font-bold uppercase">GG</p>
+                        <p class="text-md font-black text-blue-400">{{ m.gg_p }}%</p>
                     </div>
                 </div>
             </div>
             {% endfor %}
+            {% if not matches %}
+            <div class="text-center py-20 text-gray-600 italic">Nessun match attivo nei campionati selezionati.</div>
+            {% endif %}
         </div>
     </div>
 
     <script>
-        async function updateData() {
+        async function update() {
             try {
                 const r = await fetch('/api/updates');
                 const data = await r.json();
-                const container = document.getElementById('match-container');
-                if (data.length > 0) {
+                const container = document.getElementById('container');
+                if(data.length > 0) {
                     container.innerHTML = data.map(m => `
-                        <div class="match-card p-5">
-                            <div class="flex justify-between items-start mb-3">
-                                <span class="text-[10px] text-blue-400 font-bold uppercase tracking-widest">${m.league}</span>
-                                <span class="text-[10px] ${m.is_live ? 'live-label' : 'text-gray-500'}">${m.time}</span>
+                        <div class="bg-[#0d1117] border border-[#30363d] rounded-xl p-4">
+                            <div class="flex justify-between text-[10px] mb-2">
+                                <span class="text-blue-400 font-bold uppercase">${m.league}</span>
+                                <span class="${m.is_live ? 'text-red-500 font-bold' : 'text-gray-500'}">${m.time}</span>
                             </div>
                             <div class="flex justify-between items-center mb-4">
-                                <h2 class="text-sm font-bold text-white w-2/3">${m.match}</h2>
+                                <span class="text-sm font-bold text-white">${m.match}</span>
                                 <span class="text-lg font-black text-yellow-500">${m.score}</span>
                             </div>
-                            <div class="grid grid-cols-3 gap-2 text-center border-y border-gray-800 py-3 mb-4">
-                                <div><p class="text-[8px] text-gray-500 uppercase">xG Est.</p><p class="text-xs font-bold text-blue-300">${m.xg}</p></div>
+                            <div class="grid grid-cols-3 gap-2 border-y border-gray-800 py-3 mb-3 text-center">
+                                <div><p class="text-[8px] text-gray-500 uppercase">xG</p><p class="text-xs font-bold text-blue-300">${m.xg}</p></div>
                                 <div><p class="text-[8px] text-gray-500 uppercase">Rank</p><p class="text-xs font-bold text-gray-400">${m.h_rank} vs ${m.a_rank}</p></div>
-                                <div><p class="text-[8px] text-gray-500 uppercase">Urg.</p><p class="text-[8px] font-bold text-white italic uppercase">${m.urgency}</p></div>
+                                <div><p class="text-[8px] text-gray-500 uppercase">Trend</p><p class="text-[8px] font-bold text-emerald-500 uppercase">Stabile</p></div>
                             </div>
-                            <div class="flex gap-4">
-                                <div class="flex-1 text-center bg-emerald-500/5 p-2 rounded-lg border border-emerald-500/10">
-                                    <span class="text-[8px] text-emerald-500 uppercase font-bold">Over 2.5</span>
-                                    <p class="text-lg font-black text-emerald-400">${m.over_p}%</p>
+                            <div class="flex gap-2">
+                                <div class="flex-1 bg-emerald-500/5 p-2 rounded border border-emerald-500/10 text-center">
+                                    <p class="text-[8px] text-emerald-500 font-bold uppercase">Over 2.5</p>
+                                    <p class="text-md font-black text-emerald-400">${m.over_p}%</p>
                                 </div>
-                                <div class="flex-1 text-center bg-blue-500/5 p-2 rounded-lg border border-blue-500/10">
-                                    <span class="text-[8px] text-blue-500 uppercase font-bold">GG (Goal)</span>
-                                    <p class="text-lg font-black text-blue-400">${m.gg_p}%</p>
+                                <div class="flex-1 bg-blue-500/5 p-2 rounded border border-blue-500/10 text-center">
+                                    <p class="text-[8px] text-blue-500 font-bold uppercase">GG</p>
+                                    <p class="text-md font-black text-blue-400">${m.gg_p}%</p>
                                 </div>
                             </div>
                         </div>`).join('');
                 }
-            } catch (e) { console.error(e); }
+            } catch(e) {}
         }
-        setInterval(updateData, 60000);
+        setInterval(update, 60000);
     </script>
 </body>
 </html>
