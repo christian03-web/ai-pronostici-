@@ -1,5 +1,7 @@
-flask
+fastapi
+uvicorn
 requests
-scipy
-gunicorn
+jinja2
+numpy
+apscheduler
 pytz
