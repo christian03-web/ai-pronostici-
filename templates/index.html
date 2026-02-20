@@ -2,26 +2,67 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>AI Soccer Predictor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI BET ANALYZER PRO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: sans-serif; background: #121212; color: white; padding: 20px; }
-        .card { background: #1e1e1e; border-radius: 10px; padding: 15px; margin-bottom: 10px; border-left: 5px solid #00ff88; }
-        .badge { padding: 5px 10px; border-radius: 5px; font-weight: bold; }
-        .high { background: #00ff88; color: black; }
-        .medium { background: #ffaa00; color: black; }
+        body { background: #0f172a; color: #f8fafc; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .gold-text { color: #fbbf24; text-shadow: 0 0 10px rgba(251, 191, 36, 0.4); }
+        .progress-bar { height: 8px; border-radius: 4px; background: #334155; overflow: hidden; }
+        .progress-fill { height: 100%; transition: width 1s ease-in-out; }
     </style>
 </head>
-<body>
-    <h1>⚽ AI Match Analyzer</h1>
-    <div id="container">
-        {% for p in predictions %}
-        <div class="card">
-            <h3>{{ p.league }}: {{ p.match }}</h3>
-            <p>Posizione Classifica: {{ p.home_rank }}° vs {{ p.away_rank }}°</p>
-            <p>Probabilità <strong>GG</strong>: <span class="badge {{ 'high' if p.gg_prob == 'ALTA' else 'medium' }}">{{ p.gg_prob }}</span></p>
-            <p>Probabilità <strong>Over 2.5</strong>: <span class="badge {{ 'high' if p.over_prob == 'ALTA' else 'medium' }}">{{ p.over_prob }}</span></p>
+<body class="p-4 md:p-10">
+    <div class="max-w-4xl mx-auto">
+        <header class="mb-10 text-center">
+            <h1 class="text-4xl font-black gold-text mb-2 tracking-tighter">SOCCER INTELLIGENCE v2.0</h1>
+            <p class="text-slate-400">Analisi predittiva basata su algoritmi di Poisson e flussi di mercato</p>
+        </header>
+
+        <div class="grid gap-6">
+            {% for p in predictions %}
+            <div class="glass p-6 rounded-2xl shadow-2xl transition hover:scale-[1.02]">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-xs font-bold uppercase tracking-widest text-blue-400">{{ p.league }}</span>
+                    <span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">LIVE DATA</span>
+                </div>
+                
+                <div class="flex items-center justify-between mb-8">
+                    <div class="text-center w-1/3">
+                        <img src="{{ p.logo_h }}" class="w-16 h-16 mx-auto mb-2">
+                        <p class="font-bold text-sm">{{ p.match.split(' at ')[1] if ' at ' in p.match else p.match.split(' vs ')[0] }}</p>
+                    </div>
+                    <div class="text-2xl font-black text-slate-500 italic">VS</div>
+                    <div class="text-center w-1/3">
+                        <img src="{{ p.logo_a }}" class="w-16 h-16 mx-auto mb-2">
+                        <p class="font-bold text-sm">{{ p.match.split(' at ')[0] if ' at ' in p.match else p.match.split(' vs ')[1] }}</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="text-sm font-bold">GOL / GOL</span>
+                            <span class="text-sm gold-text font-bold">{{ p.gg }}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill bg-amber-400" style="width: {{ p.gg }}%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="text-sm font-bold">OVER 2.5</span>
+                            <span class="text-sm gold-text font-bold">{{ p.over }}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill bg-blue-500" style="width: {{ p.over }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
     </div>
 </body>
 </html>
